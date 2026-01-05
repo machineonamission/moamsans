@@ -1,0 +1,28 @@
+StartChar: M
+Encoding: 77 77 38
+Width: 744
+VWidth: 2136
+Flags: W
+HStem: 0 21G<46 139 325 418 604 697> 0 21G<46 139 325 418 604 697> 698 93<139 325 418 604>
+VStem: 46 93<0 698> 325 93<0 698> 604 93<0 698>
+CounterMasks: 1 1c
+LayerCount: 2
+Fore
+SplineSet
+418 791 m 1xbc
+ 604 791 l 2
+ 655 791 697 749 697 698 c 2
+ 697 0 l 1
+ 604 0 l 1
+ 604 698 l 1
+ 418 698 l 1
+ 418 0 l 1
+ 325 0 l 1
+ 325 698 l 1
+ 139 698 l 1
+ 139 0 l 1
+ 46 0 l 1
+ 46 791 l 1
+ 418 791 l 1xbc
+EndSplineSet
+EndChar
