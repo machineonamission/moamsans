@@ -6,29 +6,31 @@ font = fontforge.font()
 
 dir = r"C:\Users\Melody\PycharmProjects\moamsans\SVG"
 
+
 def make(svg, ch):
     return font.createMappedChar(ch).importOutlines(f"{dir}\\{svg}.svg", scale=False, simplify=False)
 
+
 # fairly arbitrary font size values that i used in illustrator
-ai_ascent=170
-ai_descent=50
-ai_dist=20
+ai_ascent = 170
+ai_descent = 50
+ai_dist = 20
 
-ai_em=ai_ascent+ai_descent
+ai_em = ai_ascent + ai_descent
 
-# "ttf has to be power of 2" ok man
-em=1024
+# otf has to be 1000 and ttf is "a power of 2" so 1024 ig?
+em = 1000
 
 # scale from ai size to em size
-ratio = em/ai_em
+ratio = em / ai_em
 
 font.em = em
 # these have to be rounded
-font.ascent = round(ai_ascent*ratio)
-font.descent = round(ai_descent*ratio)
+font.ascent = round(ai_ascent * ratio)
+font.descent = round(ai_descent * ratio)
 
 # go off the rounded ratio
-round_ratio = font.ascent/ai_ascent
+round_ratio = font.ascent / ai_ascent
 
 # use the first lowercase and first uppercase to move the lower left bound to 0,0, and copy that bound to all letters of its type
 # just so happens that a and A don't have descents
@@ -65,11 +67,11 @@ font.addExtrema()
 font.autoHint()
 
 # auto glyph width
-font.autoWidth(round(ai_dist*round_ratio))
+font.autoWidth(round(ai_dist * round_ratio))
 
 # auto kern
-font.addLookup("kern", "gpos_pair", None, (("kern",(("latn",("dflt")),)),))
-font.addKerningClass("kern", "kern-1", round(ai_dist*round_ratio), 5)
+font.addLookup("kern", "gpos_pair", None, (("kern", (("latn", ("dflt")),)),))
+font.addKerningClass("kern", "kern-1", round(ai_dist * round_ratio), 5)
 
 # metadata
 name = "MoaM Sans"
