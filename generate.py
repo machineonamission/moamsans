@@ -21,6 +21,7 @@ class Letter:
     lines: list[Line]
 
 
+# todo distinguish derived and forced grid
 @dataclass
 class Grid:
     xmin: int
@@ -29,7 +30,8 @@ class Grid:
     ymax: int
     em_height: int
     x_ratio: float
-    stroke_ratio: float
+    stroke_ratio: float = None
+    factory_stroke: float = None
 
     # xstep: int
     # ystep: int
@@ -43,7 +45,10 @@ class Grid:
         3. ystep * height + stroke_width = em_height
         :return:
         """
-        return self.em_height / (self.height + min(self.x_ratio, 1) * self.stroke_ratio)
+        if self.stroke_ratio:
+            return self.em_height / (self.height + min(self.x_ratio, 1) * self.stroke_ratio)
+        else:
+            return self.em_height / self.height + self.factory_stroke
 
     @property
     def xstep(self) -> float:
@@ -59,7 +64,18 @@ class Grid:
 
     @property
     def stroke_width(self) -> float:
-        return min(self.xstep, self.ystep) * self.stroke_ratio
+        if self.stroke_ratio:
+            return min(self.xstep, self.ystep) * self.stroke_ratio
+        else:
+            return self.factory_stroke
+
+    @property
+    def ascent(self) -> float:
+        return self.ymax * self.ystep + self.stroke_width
+
+    @property
+    def descent(self) -> float:
+        return -self.ymin * self.ystep
 
     # @property
     # def pixel_width(self) -> int:
@@ -80,16 +96,15 @@ class Grid:
 
 
 letters = {
-    "A": Letter([
+    "h": Letter([
         Line([
-            Point(0, 2),
-            Point(0, 0, True),
-            Point(2, 0, True),
-            Point(2, 2)
+            Point(0, 3),
+            Point(0, -1)
         ]),
         Line([
             Point(0, 1),
-            Point(2, 1),
+            Point(1, 1, True),
+            Point(1, 0)
         ])
     ]),
 }
@@ -97,13 +112,14 @@ letters = {
 grid = Grid(
     xmin=0,
     xmax=2,
-    ymin=0,
-    ymax=2,
+    ymin=-1,
+    ymax=3,
     em_height=1000,
     x_ratio=0.8,
     stroke_ratio=1/2,
 )
 
+print(grid.ascent, grid.descent)
 
 def normal(p: tuple[int, int]) -> tuple[float, float]:
     x, y = p
@@ -118,8 +134,8 @@ for letter_key, letter in letters.items():
     # grid.xmin * grid.xstep, grid.ymin * grid.ystep, grid.x_ratio * grid.em_height, grid.em_height
     with cairo.SVGSurface(f"svgs/{letter_key}.svg", grid.width * grid.xstep + grid.stroke_width, grid.height * grid.ystep + grid.stroke_width) as surface:
         context = cairo.Context(surface)
-        context.translate(-grid.xmin * grid.xstep, -grid.ymin * grid.ystep)
-        # context.scale(200, 200)
+        context.translate(0, grid.ystep * grid.ymax + grid.stroke_width)
+        context.scale(1, -1)
         context.set_line_width(grid.stroke_width)
         context.set_line_cap(cairo.LINE_CAP_SQUARE)
         for line in letter.lines:
@@ -147,11 +163,14 @@ for letter_key, letter in letters.items():
                             grid.stroke_width / 2)
 
                     a1 = math.atan2(prev_diff[1], prev_diff[0])
-                    a1 = min(math.tau - a1, a1)
+                    # a1 = min(math.tau - a1, a1)
                     a2 = math.atan2(next_diff[1], next_diff[0])
-                    a2 = min(math.tau - a2, a2)
+                    # a2 = min(math.tau - a2, a2)
 
-                    context.arc(offset_x, offset_y, grid.stroke_width / 2, a2, a1)
+                    if a1 < a2:
+                        context.arc_negative(offset_x, offset_y, grid.stroke_width / 2, a2, a1)
+                    else:
+                        context.arc(offset_x, offset_y, grid.stroke_width / 2, a2, a1)
                 else:
                     context.line_to(x, y)
             context.stroke()
