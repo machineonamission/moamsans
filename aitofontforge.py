@@ -37,6 +37,7 @@ round_ratio = font.ascent / ai_ascent
 # scale seems to fuck with it, so this is easier and more precise
 lbound = None
 ubound = None
+dbound = None
 
 for letter in string.ascii_lowercase:
     # scale to size
@@ -55,9 +56,9 @@ for letter in string.ascii_uppercase:
 
 for letter in string.digits:
     r = make(letter, letter).transform(psMat.scale(round_ratio))
-    if ubound is None:
-        ubound = r.boundingBox()[:2]
-    r.transform(psMat.translate(-ubound[0], -ubound[1]))
+    if dbound is None:
+        dbound = r.boundingBox()[:2]
+    r.transform(psMat.translate(-dbound[0], -dbound[1]))
 
 font.selection.all()
 
