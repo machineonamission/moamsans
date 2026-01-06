@@ -1,3 +1,5 @@
+# DEPRECATED, USE GENERATEFONTFORGE
+
 import cairo
 
 import math

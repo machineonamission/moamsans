@@ -59,8 +59,12 @@ class PixelPoint:
             self.y -= other.y
         return self
 
+    @property
+    def length(self) -> float:
+        return(self.x ** 2 + self.y ** 2) ** 0.5
+
     def normalize(self) -> "PixelPoint":
-        length = (self.x ** 2 + self.y ** 2) ** 0.5
+        length = self.length
         if length == 0:
             return PixelPoint(0.0, 0.0)
         return self / length
@@ -109,7 +113,7 @@ class Grid:
         if self.stroke_ratio:
             return self.em_height / (self.height + min(self.x_ratio, 1) * self.stroke_ratio)
         else:
-            return self.em_height / self.height + self.factory_stroke
+            return (self.em_height - self.factory_stroke) / self.height
 
     @property
     def xstep(self) -> float:
