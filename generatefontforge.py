@@ -34,8 +34,9 @@ print(lower_grid.stroke_width)
 
 fontforge.runInitScripts()
 font = fontforge.font()
-font.layers.add("rounded", False)
 font.layers.add("capless", False)
+font.layers.add("rounded", False)
+known_square_sizes = set()
 
 font.em = lower_grid.em_height
 # these have to be rounded
@@ -51,79 +52,36 @@ for grid, letters in master_list:
         font_letter: fontforge.glyph = font.createMappedChar(letter_key)
         for line_no, line in enumerate(letter.lines):
             line: Line
-            contour = fontforge.contour()
-            contour.moveTo(*grid.point_pos(line.points[0]).as_tuple())
-            for i in range(1, len(line.points)):
-                point = line.points[i]
+            for i in range(0, len(line.points) - 1):
+                p1 = line.points[i]
+                p2 = line.points[i + 1]
 
-                pixel = grid.point_pos(point)
+                pixel1 = grid.point_pos(p1)
+                pixel2 = grid.point_pos(p2)
 
-                if point.rounded:
-                    # we need the prev and next points to do a proper arc
-                    prev_point = line.points[i - 1]
-                    next_point = line.points[i + 1] if i + 1 < len(line.points) else None
+                diff = pixel2 - pixel1
 
-                    prev_pixel = grid.point_pos(prev_point)
-                    next_pixel = grid.point_pos(next_point) if next_point else (None, None)
-
-                    # get the direction from the rounded point to the prev and next points
-                    # this should probably only ever be up down left or right but eh
-                    prev_diff = pixel - prev_pixel
-                    next_diff = pixel - next_pixel
-                    prev_normal = prev_diff.normalize()
-                    next_normal = next_diff.normalize()
-
-                    # edges of the arc itself
-                    curve_start = pixel - (prev_normal * grid.hsw)
-                    curve_end = pixel - (next_normal * grid.hsw)
-
-                    # more spaced from the curve, so the calligraphic stroke can end before the curve starts
-                    pre_curve = pixel - (prev_normal * grid.stroke_width)
-                    post_curve = pixel - (next_normal * grid.stroke_width)
-
-                    # control points for bezier curve
-                    circle_offset = grid.hsw * (1 - circle_constant)
-                    control_1 = pixel - prev_normal * circle_offset
-                    control_2 = pixel - next_normal * circle_offset
-
-                    # stupid fucking edge case where 2 curves can be sequential AND too close for a full stroke between them, so we have to connect them
-                    prev_edge_case = prev_point.rounded and prev_diff.length / 2 <= grid.stroke_width
-                    next_edge_case = next_point and next_point.rounded and next_diff.length / 2 <= grid.stroke_width
-
-                    if prev_edge_case:
-                        # connect to previous contour
-                        curvetour = contour
-                        # throw out and reset contour var if we made one
-                        contour = fontforge.contour()
-                        contour.moveTo(*post_curve.as_tuple())
-                    else:
-                        # create space in our normal contour for the curve (by making a new contour lol)
-                        contour.lineTo(*pre_curve.as_tuple())
-                        font_letter.foreground += contour
-                        # start new contour
-                        contour = fontforge.contour()
-                        contour.moveTo(*post_curve.as_tuple())
-                        # init arc (we start a little off to make "remove overlap" operation work better)
-                        curvetour = fontforge.contour()
-                        curvetour.moveTo(*pre_curve.as_tuple())
-
-                    # bring curve to arc start
-                    curvetour.lineTo(*curve_start.as_tuple())
-                    # draw arc
-                    curvetour.cubicTo(control_1.as_tuple(), control_2.as_tuple(), curve_end.as_tuple())
-
-                    if next_edge_case:
-                        # connect to next contour
-                        contour = curvetour
-                    else:
-                        # add extra segment to make remove overlap work better
-                        curvetour.lineTo(*post_curve.as_tuple())
-                        # save arc
-                        font_letter.layers["rounded"] += curvetour
-
+                # too little space for a normal line
+                if p1.rounded and p2.rounded and diff.length / 2 < grid.stroke_width:
+                    pass
                 else:
-                    contour.lineTo(*pixel.as_tuple())
-            font_letter.foreground += contour
+                    contour = fontforge.contour()
+                    contour.moveTo(*pixel1.as_tuple())
+                    contour.lineTo(*pixel2.as_tuple())
+
+                    angle = diff.angle
+                    round_angle = round(radians_to_degrees(angle)) % 90
+
+                    if round_angle == 0:
+                        font_letter.foreground += contour
+                    else:
+                        size = grid.stroke_width / (abs(math.cos(angle)) + abs(math.sin(angle)))
+                        if size not in known_square_sizes:
+                            known_square_sizes.add(size)
+                            font.layers.add(f"square {size}", False)
+                        font_letter.layers[f"square {size}"] += contour
+
+
 
         # stroke layers appropriately
         font_letter.activeLayer = "Fore"
@@ -134,12 +92,13 @@ for grid, letters in master_list:
 
         font_letter.activeLayer = "Fore"
 
-        # merge rounded into foreground
-        font_letter.foreground += font_letter.layers["rounded"]
-        font_letter.layers["rounded"] = fontforge.layer()
+        for s in known_square_sizes:
+            font_letter.activeLayer = f"square {s}"
+            font_letter.stroke("calligraphic", s, s, 0)
 
-        font_letter.foreground += font_letter.layers["capless"]
-        font_letter.layers["capless"] = fontforge.layer()
+        for layer in ["rounded", "capless"] + [f"square {s}" for s in known_square_sizes]:
+            font_letter.foreground += font_letter.layers[layer]
+            font_letter.layers[layer] = fontforge.layer()
 
         # merge and clean up
         font_letter.removeOverlap()

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+import math
 
 
 @dataclass
@@ -7,6 +8,8 @@ class Point:
     y: int
     rounded: bool = False
 
+def radians_to_degrees(radians: float) -> float:
+    return radians * (180.0 / math.pi)
 
 @dataclass
 class PixelPoint:
@@ -58,6 +61,10 @@ class PixelPoint:
             self.x -= other.x
             self.y -= other.y
         return self
+
+    @property
+    def angle(self) -> float:
+        return math.atan2(self.y, self.x)
 
     @property
     def length(self) -> float:
