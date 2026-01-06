@@ -170,7 +170,7 @@ lower_letters = {
         Line([
             Point(0, 0),
             Point(0, 2),
-            Point(2, 2),
+            Point(1, 2),
         ]),
     ]),
     's': Letter([
@@ -727,8 +727,8 @@ upper_letters = {
             Point(2, 1),
         ]),
         Line([
-            Point(1, 0),
-            Point(1, 2),
+            Point(2, 0),
+            Point(2, 2),
         ]),
     ]),
     '5': Letter([
@@ -784,8 +784,8 @@ upper_letters = {
     '&': Letter([
         Line([
             Point(2, 0),
-            Point(0, 2, True),
-            Point(1, 2, True),
+            Point(0.25, 2, True),
+            Point(1.75, 2, True),
             Point(0, 0, True),
             Point(1, 0, True),
             Point(2, 1),
@@ -793,7 +793,7 @@ upper_letters = {
         # evil hack cause this shape is weird and i want to control where the caps are
         Line([
             Point(2, 0),
-            Point(1, 1),
+            Point((0.25+2)/2, 1),
         ]),
         Line([
             Point(1.5, 0.5),
