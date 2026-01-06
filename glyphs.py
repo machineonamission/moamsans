@@ -40,37 +40,53 @@ lower_letters = {
     ]),
     'e': Letter([
         Line([
-            Point(0, 2),
-            Point(1, 0),
-            Point(2, 2),
+            Point(2, 0),
+            Point(0, 0, True),
+            Point(0, 2, True),
+            Point(2, 2, True),
+            Point(2, 1, True),
+            Point(0, 1),
         ]),
     ]),
     'f': Letter([
         Line([
-            Point(0, 2),
             Point(1, 0),
+            Point(1, 3, True),
+            Point(2, 3),
+        ]),
+        Line([
+            Point(0, 2),
             Point(2, 2),
         ]),
     ]),
     'g': Letter([
         Line([
-            Point(0, 2),
-            Point(1, 0),
+            Point(0, -1),
+            Point(2, -1, True),
             Point(2, 2),
+            Point(0, 2, True),
+            Point(0, 0, True),
+            Point(2, 0),
         ]),
     ]),
     'h': Letter([
         Line([
+            Point(0, 0),
+            Point(0, 3),
+        ]),
+        Line([
             Point(0, 2),
-            Point(1, 0),
-            Point(2, 2),
+            Point(2, 2, True),
+            Point(2, 0),
         ]),
     ]),
     'i': Letter([
         Line([
+            Point(0, 0),
             Point(0, 2),
-            Point(1, 0),
-            Point(2, 2),
+        ]),
+        Line([
+            Point(0, 3),
         ]),
     ]),
     'j': Letter([

@@ -51,75 +51,90 @@ for grid, letters in master_list:
         for line_no, line in enumerate(letter.lines):
             line: Line
             contour = fontforge.contour()
-            contour.moveTo(*grid.point_pos(line.points[0]).as_tuple())
-            for i in range(1, len(line.points)):
-                point = line.points[i]
-
+            if len(line.points) == 1:  # special case: just a dot, strokes dont work, draw directly
+                point = line.points[0]
                 pixel = grid.point_pos(point)
 
-                if point.rounded:
-                    # we need the prev and next points to do a proper arc
-                    prev_point = line.points[i - 1]
-                    next_point = line.points[i + 1] if i + 1 < len(line.points) else None
+                bottom_left = pixel - grid.hsw
+                top_right = pixel + grid.hsw
 
-                    prev_pixel = grid.point_pos(prev_point)
-                    next_pixel = grid.point_pos(next_point) if next_point else (None, None)
+                contour.moveTo(*bottom_left.as_tuple())
+                contour.lineTo(bottom_left.x, top_right.y)
+                contour.lineTo(*top_right.as_tuple())
+                contour.lineTo(top_right.x, bottom_left.y)
+                contour.lineTo(*bottom_left.as_tuple())
+                contour.closed = True
+                font_letter.foreground += contour
+            else:
+                contour.moveTo(*grid.point_pos(line.points[0]).as_tuple())
+                for i in range(1, len(line.points)):
+                    point = line.points[i]
 
-                    # get the direction from the rounded point to the prev and next points
-                    # this should probably only ever be up down left or right but eh
-                    prev_diff = pixel - prev_pixel
-                    next_diff = pixel - next_pixel
-                    prev_normal = prev_diff.normalize()
-                    next_normal = next_diff.normalize()
+                    pixel = grid.point_pos(point)
 
-                    # edges of the arc itself
-                    curve_start = pixel - (prev_normal * grid.hsw)
-                    curve_end = pixel - (next_normal * grid.hsw)
+                    if point.rounded:
+                        # we need the prev and next points to do a proper arc
+                        prev_point = line.points[i - 1]
+                        next_point = line.points[i + 1] if i + 1 < len(line.points) else None
 
-                    # control points for bezier curve
-                    circle_offset = grid.hsw * (1 - circle_constant)
-                    control_1 = pixel - prev_normal * circle_offset
-                    control_2 = pixel - next_normal * circle_offset
+                        prev_pixel = grid.point_pos(prev_point)
+                        next_pixel = grid.point_pos(next_point) if next_point else (None, None)
 
-                    # bring curve to arc start
-                    contour.lineTo(*curve_start.as_tuple())
-                    # draw arc
-                    contour.cubicTo(control_1.as_tuple(), control_2.as_tuple(), curve_end.as_tuple())
-                else:
-                    contour.lineTo(*pixel.as_tuple())
-            # complete contour
-            font_letter.layers["scratch"] += contour
+                        # get the direction from the rounded point to the prev and next points
+                        # this should probably only ever be up down left or right but eh
+                        prev_diff = pixel - prev_pixel
+                        next_diff = pixel - next_pixel
+                        prev_normal = prev_diff.normalize()
+                        next_normal = next_diff.normalize()
 
-            # stroke it
-            font_letter.activeLayer = "scratch"
-            font_letter.stroke("circular", grid.stroke_width, cap="butt", join="miter", extendcap=2)
+                        # edges of the arc itself
+                        curve_start = pixel - (prev_normal * grid.hsw)
+                        curve_end = pixel - (next_normal * grid.hsw)
 
-            # clip the path in a nice way that preserves sharp corners
+                        # control points for bezier curve
+                        circle_offset = grid.hsw * (1 - circle_constant)
+                        control_1 = pixel - prev_normal * circle_offset
+                        control_2 = pixel - next_normal * circle_offset
 
-            # construct bounding box
-            pixels = [grid.point_pos(p) for p in line.points]
-            min_x = min(p.x for p in pixels) - grid.hsw
-            max_x = max(p.x for p in pixels) + grid.hsw
-            min_y = min(p.y for p in pixels) - grid.hsw
-            max_y = max(p.y for p in pixels) + grid.hsw
+                        # bring curve to arc start
+                        contour.lineTo(*curve_start.as_tuple())
+                        # draw arc
+                        contour.cubicTo(control_1.as_tuple(), control_2.as_tuple(), curve_end.as_tuple())
+                    else:
+                        contour.lineTo(*pixel.as_tuple())
+                # complete contour
+                font_letter.layers["scratch"] += contour
 
-            box = fontforge.contour()
-            box.moveTo(min_x, min_y)
-            box.lineTo(min_x, max_y)
-            box.lineTo(max_x, max_y)
-            box.lineTo(max_x, min_y)
+                # stroke it
+                font_letter.activeLayer = "scratch"
+                font_letter.stroke("circular", grid.stroke_width, cap="butt", join="miter", extendcap=2)
 
-            box.lineTo(min_x, min_y)
-            box.closed = True  # this is stupid
+                # clip the path in a nice way that preserves sharp corners
 
-            font_letter.layers["scratch"] += box
+                # construct bounding box
+                pixels = [grid.point_pos(p) for p in line.points]
+                min_x = min(p.x for p in pixels) - grid.hsw
+                max_x = max(p.x for p in pixels) + grid.hsw
+                min_y = min(p.y for p in pixels) - grid.hsw
+                max_y = max(p.y for p in pixels) + grid.hsw
 
-            # AND operation of our box and stuff
-            font_letter.intersect()
+                box = fontforge.contour()
+                box.moveTo(min_x, min_y)
+                box.lineTo(min_x, max_y)
+                box.lineTo(max_x, max_y)
+                box.lineTo(max_x, min_y)
 
-            # merge with foreground
-            font_letter.foreground += font_letter.layers["scratch"]
-            font_letter.layers["scratch"] = fontforge.layer()
+                box.lineTo(min_x, min_y)
+                box.closed = True  # this is stupid
+
+                font_letter.layers["scratch"] += box
+
+                # AND operation of our box and stuff
+                font_letter.intersect()
+
+                # merge with foreground
+                font_letter.foreground += font_letter.layers["scratch"]
+                font_letter.layers["scratch"] = fontforge.layer()
 
         # merge and clean up
         font_letter.activeLayer = "Fore"
