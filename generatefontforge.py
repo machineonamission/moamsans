@@ -168,7 +168,7 @@ font.fontname = name
 font.fullname = name
 font.copyright = """Copyright (c) 2026, Machine on a Mission (https://machineonamission.me),
 with Reserved Font Name MoaM Sans."""
-font.version = "2.0"
+font.version = "2.1"
 
 # extra metadata
 lang = "English (US)"
