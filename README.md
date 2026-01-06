@@ -2,7 +2,7 @@
 
 My custom display font
 ![img.png](img.png)
-![SIL Open Font License](https://openfontlicense.org/images/OFLLogoRectColor.png)
+[![SIL Open Font License](https://openfontlicense.org/images/OFLLogoRectColor.png)](https://openfontlicense.org/)
 
 ## build instructions
 
