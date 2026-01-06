@@ -1,7 +1,7 @@
 # MoaM Sans
 
 My custom display font
-![img_1.png](img_1.png)
+![img.png](img.png)
 ![SIL Open Font License](https://openfontlicense.org/images/OFLLogoRectColor.png)
 
 ## build instructions
