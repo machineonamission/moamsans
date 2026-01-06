@@ -107,16 +107,18 @@ for grid, letters in master_list:
 
                 # stroke it
                 font_letter.activeLayer = "scratch"
-                font_letter.stroke("circular", grid.stroke_width, cap="butt", join="miter", extendcap=2)
+                font_letter.stroke("circular", grid.stroke_width, cap="butt", join="miter",
+                                   extendcap=2 if line.extend_cap else 0)
 
                 # clip the path in a nice way that preserves sharp corners
 
                 # construct bounding box
                 pixels = [grid.point_pos(p) for p in line.points]
-                min_x = min(p.x for p in pixels) - grid.hsw
-                max_x = max(p.x for p in pixels) + grid.hsw
-                min_y = min(p.y for p in pixels) - grid.hsw
-                max_y = max(p.y for p in pixels) + grid.hsw
+                offset = 0 if line.restrictive_clip else grid.hsw
+                min_x = min(p.x for p in pixels) - offset
+                max_x = max(p.x for p in pixels) + offset
+                min_y = min(p.y for p in pixels) - offset
+                max_y = max(p.y for p in pixels) + offset
 
                 box = fontforge.contour()
                 box.moveTo(min_x, min_y)
@@ -149,12 +151,14 @@ font.round()
 font.addExtrema()
 font.autoHint()
 
+spacing = round(lower_grid.xstep / 2)
+
 # auto glyph width
-font.autoWidth(round(lower_grid.stroke_width))
+font.autoWidth(spacing)
 
 # auto kern
 font.addLookup("kern", "gpos_pair", None, (("kern", (("latn", ("dflt")),)),))
-font.addKerningClass("kern", "kern-1", round(lower_grid.stroke_width), 5)
+font.addKerningClass("kern", "kern-1", round(spacing), 5)
 #
 # # metadata
 # name = "MoaM Sans"

@@ -87,6 +87,9 @@ class PixelPoint:
 @dataclass
 class Line:
     points: list[Point]
+    extend_cap: bool = True
+    restrictive_clip: bool = False
+
 
 
 @dataclass
