@@ -29,8 +29,8 @@ master_list = [
     (upper_grid, upper_letters),
 ]
 
-print(lower_grid.ascent, lower_grid.descent)
-print(lower_grid.stroke_width)
+# print(lower_grid.ascent, lower_grid.descent)
+# print(lower_grid.stroke_width)
 
 fontforge.runInitScripts()
 font = fontforge.font()
@@ -168,7 +168,7 @@ font.fontname = name
 font.fullname = name
 font.copyright = """Copyright (c) 2026, Machine on a Mission (https://machineonamission.me),
 with Reserved Font Name MoaM Sans."""
-font.version = "1.0"
+font.version = "2.0"
 
 # extra metadata
 lang = "English (US)"
