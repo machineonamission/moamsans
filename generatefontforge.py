@@ -34,9 +34,7 @@ print(lower_grid.stroke_width)
 
 fontforge.runInitScripts()
 font = fontforge.font()
-font.layers.add("capless", False)
-font.layers.add("rounded", False)
-known_square_sizes = set()
+font.layers.add("scratch", False)
 
 font.em = lower_grid.em_height
 # these have to be rounded
@@ -52,55 +50,79 @@ for grid, letters in master_list:
         font_letter: fontforge.glyph = font.createMappedChar(letter_key)
         for line_no, line in enumerate(letter.lines):
             line: Line
-            for i in range(0, len(line.points) - 1):
-                p1 = line.points[i]
-                p2 = line.points[i + 1]
+            contour = fontforge.contour()
+            contour.moveTo(*grid.point_pos(line.points[0]).as_tuple())
+            for i in range(1, len(line.points)):
+                point = line.points[i]
 
-                pixel1 = grid.point_pos(p1)
-                pixel2 = grid.point_pos(p2)
+                pixel = grid.point_pos(point)
 
-                diff = pixel2 - pixel1
+                if point.rounded:
+                    # we need the prev and next points to do a proper arc
+                    prev_point = line.points[i - 1]
+                    next_point = line.points[i + 1] if i + 1 < len(line.points) else None
 
-                # too little space for a normal line
-                if p1.rounded and p2.rounded and diff.length / 2 < grid.stroke_width:
-                    pass
+                    prev_pixel = grid.point_pos(prev_point)
+                    next_pixel = grid.point_pos(next_point) if next_point else (None, None)
+
+                    # get the direction from the rounded point to the prev and next points
+                    # this should probably only ever be up down left or right but eh
+                    prev_diff = pixel - prev_pixel
+                    next_diff = pixel - next_pixel
+                    prev_normal = prev_diff.normalize()
+                    next_normal = next_diff.normalize()
+
+                    # edges of the arc itself
+                    curve_start = pixel - (prev_normal * grid.hsw)
+                    curve_end = pixel - (next_normal * grid.hsw)
+
+                    # control points for bezier curve
+                    circle_offset = grid.hsw * (1 - circle_constant)
+                    control_1 = pixel - prev_normal * circle_offset
+                    control_2 = pixel - next_normal * circle_offset
+
+                    # bring curve to arc start
+                    contour.lineTo(*curve_start.as_tuple())
+                    # draw arc
+                    contour.cubicTo(control_1.as_tuple(), control_2.as_tuple(), curve_end.as_tuple())
                 else:
-                    contour = fontforge.contour()
-                    contour.moveTo(*pixel1.as_tuple())
-                    contour.lineTo(*pixel2.as_tuple())
+                    contour.lineTo(*pixel.as_tuple())
+            # complete contour
+            font_letter.layers["scratch"] += contour
 
-                    angle = diff.angle
-                    round_angle = round(radians_to_degrees(angle)) % 90
+            # stroke it
+            font_letter.activeLayer = "scratch"
+            font_letter.stroke("circular", grid.stroke_width, cap="butt", join="miter", extendcap=2)
 
-                    if round_angle == 0:
-                        font_letter.foreground += contour
-                    else:
-                        size = grid.stroke_width / (abs(math.cos(angle)) + abs(math.sin(angle)))
-                        if size not in known_square_sizes:
-                            known_square_sizes.add(size)
-                            font.layers.add(f"square {size}", False)
-                        font_letter.layers[f"square {size}"] += contour
+            # clip the path in a nice way that preserves sharp corners
 
+            # construct bounding box
+            pixels = [grid.point_pos(p) for p in line.points]
+            min_x = min(p.x for p in pixels) - grid.hsw
+            max_x = max(p.x for p in pixels) + grid.hsw
+            min_y = min(p.y for p in pixels) - grid.hsw
+            max_y = max(p.y for p in pixels) + grid.hsw
 
+            box = fontforge.contour()
+            box.moveTo(min_x, min_y)
+            box.lineTo(min_x, max_y)
+            box.lineTo(max_x, max_y)
+            box.lineTo(max_x, min_y)
 
-        # stroke layers appropriately
-        font_letter.activeLayer = "Fore"
-        font_letter.stroke("calligraphic", grid.stroke_width, grid.stroke_width, 0)
+            box.lineTo(min_x, min_y)
+            box.closed = True  # this is stupid
 
-        font_letter.activeLayer = "rounded"
-        font_letter.stroke("circular", grid.stroke_width, cap="butt")
+            font_letter.layers["scratch"] += box
 
-        font_letter.activeLayer = "Fore"
+            # AND operation of our box and stuff
+            font_letter.intersect()
 
-        for s in known_square_sizes:
-            font_letter.activeLayer = f"square {s}"
-            font_letter.stroke("calligraphic", s, s, 0)
-
-        for layer in ["rounded", "capless"] + [f"square {s}" for s in known_square_sizes]:
-            font_letter.foreground += font_letter.layers[layer]
-            font_letter.layers[layer] = fontforge.layer()
+            # merge with foreground
+            font_letter.foreground += font_letter.layers["scratch"]
+            font_letter.layers["scratch"] = fontforge.layer()
 
         # merge and clean up
+        font_letter.activeLayer = "Fore"
         font_letter.removeOverlap()
         font_letter.round()
         font_letter.simplify()
