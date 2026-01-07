@@ -41,6 +41,8 @@ font.em = lower_grid.em_height
 font.ascent = round(lower_grid.ascent)
 font.descent = round(lower_grid.descent)
 
+font.encoding = "UnicodeFull"
+
 circle_constant = (4 / 3) * (math.sqrt(2) - 1)  # for bezier circle approximation
 
 
@@ -73,6 +75,7 @@ def scract_to_foreground():
 for grid, letters in master_list:
     grid: Grid
     for letter_key, letter in letters.items():
+        print(letter_key)
         letter: Letter
         font_letter: fontforge.glyph = font.createMappedChar(letter_key)
         for orig_line in letter.lines:
@@ -84,21 +87,27 @@ for grid, letters in master_list:
                 font_letter.foreground += box_at(pixel, grid.hsw)
             else:
                 # hack to get ends to work properly
-                orig_line.extend_cap = False
                 lines = [
-                    orig_line
+                    (orig_line, orig_line.restrictive_clip_entire_line)
                 ]
-                for (end_p, next_p) in [(orig_line.points[0], orig_line.points[1]),
-                                        (orig_line.points[-1], orig_line.points[-2])]:
-                    dx = end_p.x - next_p.x
-                    dy = end_p.y - next_p.y
-                    midpx = end_p.x - (dx / 2)
-                    midpy = end_p.y - (dy / 2)
-                    lines.append(Line([
-                        end_p, Point(midpx, midpy)
-                    ]))
+                # if we restrictive clip the entire line, these ends are pointless
+                if not orig_line.restrictive_clip_entire_line:
+                    # explicitly extend the caps, we will clip them off later per each endpoint
+                    for (end_p, next_p, extend) in [
+                        (orig_line.points[0], orig_line.points[1], orig_line.restrictive_trim_start),
+                        (orig_line.points[-1], orig_line.points[-2], orig_line.restrictive_trim_end)]:
+                        dx = end_p.x - next_p.x
+                        dy = end_p.y - next_p.y
+                        midpx = end_p.x - (dx / 2)
+                        midpy = end_p.y - (dy / 2)
+                        super_end_x = end_p.x + (dx * 10)
+                        super_end_y = end_p.y + (dy * 10)
+                        super_end = Point(super_end_x, super_end_y, exclude_from_clip_box=True)
+                        lines.append((Line([
+                            super_end, end_p, Point(midpx, midpy)
+                        ]), extend))
 
-                for line in lines:
+                for (line, restrictive_clip) in lines:
                     contour = fontforge.contour()
 
                     contour.moveTo(*grid.point_pos(line.points[0]).as_tuple())
@@ -143,20 +152,31 @@ for grid, letters in master_list:
                     # stroke it
                     font_letter.activeLayer = "scratch"
                     font_letter.stroke("circular", grid.stroke_width, cap="butt", join="miter",
-                                       extendcap=2 if line.extend_cap else 0)
+                                       extendcap=0)
 
                     # clip the path in a nice way that preserves sharp corners
 
                     # construct bounding box
-                    pixels = [grid.point_pos(p) for p in line.points]
-                    offset = 0 if line.restrictive_clip else grid.hsw + 0.25
+                    pixels = [grid.point_pos(p) for p in line.points if not p.exclude_from_clip_box]
+                    offset = 0 if restrictive_clip or line.restrictive_clip_entire_line else grid.hsw
                     min_x = min(p.x for p in pixels) - offset
                     max_x = max(p.x for p in pixels) + offset
                     min_y = min(p.y for p in pixels) - offset
                     max_y = max(p.y for p in pixels) + offset
 
+                    # sometimes we want a restrictive clip on a vertical/horizontal line, so make that actually work
+                    if min_x == max_x:
+                        min_x -= grid.hsw
+                        max_x += grid.hsw
+                    if min_y == max_y:
+                        min_y -= grid.hsw
+                        max_y += grid.hsw
+
                     font_letter.layers["scratch"] += rect_at(PixelPoint(min_x, min_y), PixelPoint(max_x, max_y))
 
+                    # do this otherwise there's odd behavior with like float epsilon garbage, we have to do it
+                    # eventually anyways
+                    font_letter.round()
                     # AND operation of our box and stuff
                     font_letter.intersect()
 
@@ -165,8 +185,8 @@ for grid, letters in master_list:
 
         # merge and clean up
         font_letter.activeLayer = "Fore"
+
         font_letter.removeOverlap()
-        font_letter.round()
         font_letter.simplify()
 
 font.selection.all()
@@ -175,15 +195,25 @@ font.selection.all()
 font.round()
 font.addExtrema()
 font.autoHint()
+font.correctDirection()
 
 spacing = round(lower_grid.xstep / 2)
 
 # auto glyph width
 font.autoWidth(spacing)
 
+font.selection.all()
+
 # auto kern
 font.addLookup("kern", "gpos_pair", None, (("kern", (("latn", ("dflt")),)),))
-font.addKerningClass("kern", "kern-1", round(spacing), 5)
+font.addLookupSubtable("kern", "kern-1")
+# cl = font.addKerningClass("kern", "kern-1", round(spacing), 1)
+font.autoKern("kern-1", round(spacing), touch=True)
+
+space: fontforge.glyph = font.createMappedChar(" ")
+space.width = spacing * 3
+
+font.reencode("Compacted")
 
 # metadata
 name = "MoaM Sans"
@@ -193,7 +223,7 @@ font.fontname = name
 font.fullname = name
 font.copyright = """Copyright (c) 2026, Machine on a Mission (https://machineonamission.me),
 with Reserved Font Name MoaM Sans."""
-font.version = "2.1"
+font.version = "2.2"
 
 # extra metadata
 lang = "English (US)"

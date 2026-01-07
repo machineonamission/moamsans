@@ -1,3 +1,5 @@
+import math
+
 from structs import Letter, Line, Point
 
 lower_letters = {
@@ -146,7 +148,7 @@ lower_letters = {
             Point(2, 0, True),
             Point(0, 0, True),
             Point(0, 1),
-        ], extend_cap=False),
+        ]),
     ]),
     'p': Letter([
         Line([
@@ -264,8 +266,8 @@ lower_letters = {
             Point(0, 2),
         ]),
         Line([
-            Point(1, 3),
-            Point(1, 2),
+            Point(2, 3),
+            Point(2, 2),
         ]),
     ]),
     r'.': Letter([
@@ -322,13 +324,9 @@ lower_letters = {
             Point(1, 2, True),
             Point(2, 2, True),
             Point(2, 3, True),
-            Point(1, 3),
-        ]),
-        Line([
-            Point(1, 3),
             Point(0, 3, True),
             Point(0, 2),
-        ], extend_cap=False),
+        ], restrictive_trim_end=True),
     ]),
     r')': Letter([
         Line([
@@ -356,17 +354,9 @@ lower_letters = {
     ]),
     r'*': Letter([
         Line([
-            Point(1, 1),
-            Point(1, 3),
-        ]),
-        Line([
-            Point(0, 1),
-            Point(2, 3),
-        ]),
-        Line([
-            Point(2, 1),
-            Point(0, 3),
-        ]),
+            Point(1, 2),
+            Point(1 + math.sin(math.tau / 5 * i), 2 + math.cos(math.tau / 5 * i)),
+        ]) for i in range(1, 6)
     ]),
     r'/': Letter([
         Line([
@@ -390,6 +380,162 @@ lower_letters = {
             Point(2, 2.5),
         ]),
     ]),
+    r'<': Letter([
+        Line([
+            Point(2, 2),
+            Point(0, 1),
+            Point(2, 0),
+        ]),
+    ]),
+    r'>': Letter([
+        Line([
+            Point(0, 2),
+            Point(2, 1),
+            Point(0, 0),
+        ]),
+    ]),
+    r'@': Letter([
+        Line([
+            Point(2.5, 0),
+            Point(2.5, 2),
+            Point(1, 2, True),
+            Point(1, 0, True),
+            Point(4, 0, True),
+            Point(4, 3, True),
+            Point(-0.5, 3, True),
+            Point(-0.5, -1, True),
+            Point(4, -1),
+        ]),
+    ]),
+    r'[': Letter([
+        Line([
+            Point(1, 0),
+            Point(0, 0),
+            Point(0, 3),
+            Point(1, 3),
+        ]),
+    ]),
+    r']': Letter([
+        Line([
+            Point(0, 0),
+            Point(1, 0),
+            Point(1, 3),
+            Point(0, 3),
+        ]),
+    ]),
+    r'^': Letter([
+        Line([
+            Point(0, 2),
+            Point(1, 3),
+            Point(2, 2),
+        ]),
+    ]),
+    r'_': Letter([
+        Line([
+            Point(0, -1),
+            Point(2, -1),
+        ]),
+    ]),
+    r'`': Letter([
+        Line([
+            Point(0, 3),
+            Point(1, 2),
+        ]),
+    ]),
+    r'{': Letter([
+        Line([
+            Point(2, -1),
+            Point(1, -1, True),
+            Point(1, 0, True),
+            Point(0, 1),
+            Point(1, 2, True),
+            Point(1, 3, True),
+            Point(2, 3),
+        ]),
+    ]),
+    r'}': Letter([
+        Line([
+            Point(0, -1),
+            Point(1, -1, True),
+            Point(1, 0, True),
+            Point(2, 1),
+            Point(1, 2, True),
+            Point(1, 3, True),
+            Point(0, 3),
+        ]),
+    ]),
+    r'|': Letter([
+        Line([
+            Point(0, -1),
+            Point(0, 3)
+        ]),
+    ]),
+    r'~': Letter([
+        Line([
+            Point(0, 1),
+            Point(0, 2, True),
+            Point(1, 2, True),
+            Point(1, 1, True),
+            Point(2, 1, True),
+            Point(2, 2)
+        ], ),
+    ]),
+    '$': Letter([
+        Line([
+            Point(0, 0),
+            Point(2.5, 0, True),
+            Point(2.5, 1, True),
+            Point(0, 1, True),
+            Point(0, 2, True),
+            Point(2.5, 2),
+        ]),
+        Line([
+            Point(1.25, -1),
+            Point(1.25, 3),
+        ]),
+    ]),
+    '%': Letter([
+        Line([
+            Point(0, 2.5),
+            Point(0, 3, True),
+            Point(1, 3, True),
+            Point(1, 2, True),
+            Point(0, 2, True),
+            Point(0, 2.5),
+
+        ], restrictive_trim_end=True, restrictive_trim_start=True),
+        Line([
+            Point(2, 0.5),
+            Point(2, 1, True),
+            Point(3, 1, True),
+            Point(3, 0, True),
+            Point(2, 0, True),
+            Point(2, 0.5),
+
+        ], restrictive_trim_end=True, restrictive_trim_start=True),
+        Line([
+            Point(0, 0),
+            Point(3, 3),
+        ]),
+    ]),
+    '#': Letter([
+        Line([
+            Point(0, 0.5),
+            Point(3, 0.5),
+        ]),
+        Line([
+            Point(0, 2.5),
+            Point(3, 2.5),
+        ]),
+        Line([
+            Point(0.5, 0),
+            Point(0.5, 3),
+        ]),
+        Line([
+            Point(2.5, 0),
+            Point(2.5, 3),
+        ]),
+    ]),
 }
 
 upper_letters = {
@@ -407,14 +553,12 @@ upper_letters = {
     ]),
     'B': Letter([
         Line([
-            # technically i dont support starting or ending with curves, so evil hack
-            Point(0, 1),
             Point(0, 2),
             Point(2, 2, True),
             Point(2, 0, True),
             Point(0, 0),
-            Point(0, 1),
-        ], extend_cap=False),
+            Point(0, 2),
+        ]),
         Line([
             Point(0, 1),
             Point(2, 1),
@@ -430,14 +574,12 @@ upper_letters = {
     ]),
     'D': Letter([
         Line([
-            # technically i dont support starting or ending with curves, so evil hack
-            Point(0, 1),
             Point(0, 2),
             Point(2, 2, True),
             Point(2, 0, True),
             Point(0, 0),
-            Point(0, 1),
-        ], extend_cap=False),
+            Point(0, 2),
+        ]),
     ]),
     'E': Letter([
         Line([
@@ -554,14 +696,15 @@ upper_letters = {
     ]),
     'O': Letter([
         Line([
-            # technically i dont support starting or ending with curves, so evil hack
+            # technically i dont support starting or ending with curves, but technically this is 4 all rounded corners,
+            # so evil hack
             Point(0, 1),
             Point(0, 2, True),
             Point(2, 2, True),
             Point(2, 0, True),
             Point(0, 0, True),
             Point(0, 1),
-        ], extend_cap=False),
+        ]),
     ]),
     'P': Letter([
         Line([
@@ -583,7 +726,7 @@ upper_letters = {
         Line([
             Point(2, 0),
             Point(1, 1),
-        ], restrictive_clip=True),
+        ], restrictive_clip_entire_line=True),
     ]),
     'R': Letter([
         Line([
@@ -592,6 +735,9 @@ upper_letters = {
             Point(2, 2, True),
             Point(2, 1, True),
             Point(0, 1),
+        ]),
+        Line([
+            Point(1, 1),
             Point(2, 0),
         ]),
     ]),
@@ -681,11 +827,11 @@ upper_letters = {
             Point(2, 0, True),
             Point(0, 0, True),
             Point(0, 1),
-        ], extend_cap=False),
+        ]),
         Line([
             Point(0, 2),
             Point(2, 0),
-        ], restrictive_clip=True),
+        ], restrictive_clip_entire_line=True),
     ]),
     '1': Letter([
         Line([
@@ -760,7 +906,7 @@ upper_letters = {
     ]),
     '8': Letter([
         Line([
-            # technically i dont support starting or ending with curves, so evil hack
+            # technically i dont support starting or ending with curves, but we can make the 8 without that
             Point(0, 1),
             Point(0, 2, True),
             Point(2, 2, True),
@@ -768,7 +914,7 @@ upper_letters = {
             Point(0, 0, True),
             Point(0, 1),
             Point(2, 1),
-        ], extend_cap=False),
+        ]),
     ]),
     '9': Letter([
         Line([
@@ -789,16 +935,20 @@ upper_letters = {
             Point(0, 0, True),
             Point(1, 0, True),
             Point(2, 1),
-        ], extend_cap=False),
-        # evil hack cause this shape is weird and i want to control where the caps are
-        # Line([
-        #     Point(2, 0),
-        #     Point((0.25+2)/2, 1),
-        # ]),
-        # Line([
-        #     Point(1.5, 0.5),
-        #     Point(2, 1),
-        # ]),
+        ]),
     ]),
-
+    # '$': Letter([
+    #     Line([
+    #         Point(0, 0),
+    #         Point(2, 0, True),
+    #         Point(2, 1, True),
+    #         Point(0, 1, True),
+    #         Point(0, 2, True),
+    #         Point(2, 2),
+    #     ]),
+    #     Line([
+    #         Point(1, 0),
+    #         Point(1, 2),
+    #     ]),
+    # ]),
 }

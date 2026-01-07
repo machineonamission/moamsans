@@ -7,6 +7,7 @@ class Point:
     x: float
     y: float
     rounded: bool = False
+    exclude_from_clip_box: bool = False
 
 def radians_to_degrees(radians: float) -> float:
     return radians * (180.0 / math.pi)
@@ -87,8 +88,11 @@ class PixelPoint:
 @dataclass
 class Line:
     points: list[Point]
-    extend_cap: bool = True
-    restrictive_clip: bool = False
+    # clip the starting or end point's cap to touch the coordinate, rather than extending to the stroke width
+    restrictive_trim_start: bool = False
+    restrictive_trim_end: bool = False
+    # trim the entire line to its bounding box ignoring the stroke width
+    restrictive_clip_entire_line: bool = False
 
 
 
