@@ -4,8 +4,8 @@ import math
 
 @dataclass
 class Point:
-    x: int
-    y: int
+    x: float
+    y: float
     rounded: bool = False
 
 def radians_to_degrees(radians: float) -> float:

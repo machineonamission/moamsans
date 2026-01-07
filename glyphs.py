@@ -121,12 +121,12 @@ lower_letters = {
         Line([
             Point(0, 0),
             Point(0, 2),
-            Point(2, 2, True),
-            Point(2, 0),
+            Point(3, 2, True),
+            Point(3, 0),
         ]),
         Line([
-            Point(1, 0),
-            Point(1, 2),
+            Point(1.5, 0),
+            Point(1.5, 2),
         ]),
     ]),
     'n': Letter([
@@ -213,12 +213,12 @@ lower_letters = {
         Line([
             Point(0, 2),
             Point(0, 0, True),
-            Point(2, 0),
-            Point(2, 2),
+            Point(3, 0),
+            Point(3, 2),
         ]),
         Line([
-            Point(1, 0),
-            Point(1, 2),
+            Point(1.5, 0),
+            Point(1.5, 2),
         ]),
     ]),
     'x': Letter([
@@ -448,7 +448,7 @@ upper_letters = {
         ]),
         Line([
             Point(0, 1),
-            Point(2, 1),
+            Point(1, 1),
         ]),
     ]),
     'F': Letter([
@@ -459,7 +459,7 @@ upper_letters = {
         ]),
         Line([
             Point(0, 1),
-            Point(2, 1),
+            Point(1, 1),
         ]),
     ]),
     'G': Letter([
@@ -791,14 +791,14 @@ upper_letters = {
             Point(2, 1),
         ], extend_cap=False),
         # evil hack cause this shape is weird and i want to control where the caps are
-        Line([
-            Point(2, 0),
-            Point((0.25+2)/2, 1),
-        ]),
-        Line([
-            Point(1.5, 0.5),
-            Point(2, 1),
-        ]),
+        # Line([
+        #     Point(2, 0),
+        #     Point((0.25+2)/2, 1),
+        # ]),
+        # Line([
+        #     Point(1.5, 0.5),
+        #     Point(2, 1),
+        # ]),
     ]),
 
 }
